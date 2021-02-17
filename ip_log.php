@@ -4,11 +4,11 @@
  * R2B2- Src - Classes - Ip Log
  * php version 7
  *
- * @category Ninguno
- * @package  Ninguno
- * @author   Ninguno <Ninguno@ninguno.com>
- * @license  Ninguno Ninguno.com
- * @link     Ninguno
+ * @category Class
+ * @package  Ip_Log_Class
+ * @author   R2D2DEV <r2d2dev@gmail.com>
+ * @license  MIT License
+ * @link     https://github.com/R2B2DEV
  */
 
 namespace R2B2;
@@ -20,11 +20,11 @@ namespace R2B2;
  * relacionados a este, como el pais, el estado, la ciudad, el metodo de soliicitud,
  * la url solicitudada, el sitio desde donde es referido y el user agent.
  *
- * @category Ninguno
- * @package  Ninguno
- * @author   Ninguno <Ninguno@ninguno.com>
- * @license  Ninguno Ninguno.com
- * @link     Ninguno
+ * @category Class
+ * @package  Ip_Log_Class
+ * @author   R2D2DEV <r2d2dev@gmail.com>
+ * @license  MIT License
+ * @link     https://github.com/R2B2DEV
  */
 class IpLog
 {
@@ -75,6 +75,29 @@ class IpLog
         $this->_checkCountry();
         $this->_checkRegion();
         $this->_checkCity();
+    }
+    /**
+     * Ejecuta Curl
+     * ------------------------------------------------------------------------------
+     * Ejecuta Curl con parametros GET
+     * 
+     * @param string $url url para curl
+     *
+     * @return object
+     */
+    private function _executeCurl($url)
+    {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10000);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 30000);
+        $return = curl_exec($curl);
+        $return = json_decode($return);
+        curl_close($curl);
+        return $return;
     }
     /**
      * Verifica User Agent
@@ -191,7 +214,7 @@ class IpLog
      */
     private function _getIpInfo()
     {
-        $details = executeCurl(
+        $details = $this->_executeCurl(
             "http://ipinfo.io/" . $this->_ip["address"] . "?token=" . IP_INFO_TOKEN
         );
         if (isset($details->bogon) or is_null($details)) {
@@ -322,7 +345,11 @@ class IpLog
     /**
      * Obtener Registro de Ips
      * ------------------------------------------------------------------------------
-     * Obtiene todos los daltos almacenados de las direcciones ip registradas.
+     * Obtiene todos los daltos almacenados de las direcciones ip registradas. Los
+     * valores son obtenidos por paginas en caso de que la tabla sea muy grande.
+     * 
+     * @param int $pageIndex Pagina de resultados a motrar.
+     * @param int $pageLimit Cantidad de resultados por pagina.
      * 
      * @return array
      */
